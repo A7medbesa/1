@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B E S A | 3D Interactive Experience</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #010409;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        /* شاشة التحميل السينمائية للموقع */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #010409;
+            z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 1s ease;
+        }
+        .spinner {
+            width: 60px; height: 60px;
+            border: 2px solid rgba(0, 242, 254, 0.05);
+            border-radius: 50%;
+            border-top-color: #00f2fe;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* حاوية الـ 3D الثابتة بالخلفية */
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        /* واجهة العرض والمحتوى النصي فوق الـ 3D */
+        #ui-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+
+        /* الهيدر الاحترافي مثل فيديو Active Theory */
+        header {
+            position: fixed;
+            top: 0; left: 0; width: 100%;
+            padding: 25px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 10;
+            background: linear-gradient(to bottom, rgba(1,4,9,0.8), transparent);
+        }
+        .logo {
+            font-size: 26px; font-weight: 900; letter-spacing: 6px;
+            background: linear-gradient(45deg, #00f2fe, #ffffff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            color: white; padding: 10px 24px;
+            border-radius: 20px; font-weight: bold; cursor: pointer;
+            letter-spacing: 2px; font-size: 12px;
+            transition: 0.3s ease;
+        }
+        .nav-btn:hover { background: #ffffff; color: #010409; box-shadow: 0 0 15px #ffffff; }
+
+        /* الأقسام الممتدة للتصفح والسكرول */
+        section {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 100px 40px;
+            position: relative;
+            pointer-events: none; /* يترك التحكم بالكامل للفأرة للـ 3D الخلفي */
+        }
+        .interactive-element {
+            pointer-events: auto; /* تفعيل التفاعل مع الأزرار والكروت فقط */
+        }
+
+        /* القسم الأول: دخول باسم B E S A واستايل الألياف الضوئية */
+        #hero-section {
+            text-align: center;
+        }
+        .hero-title {
+            font-size: 6.5rem; font-weight: 900; line-height: 1;
+            margin-bottom: 15px; letter-spacing: 12px;
+            background: linear-gradient(to bottom, #ffffff, #64748b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .hero-subtitle {
+            font-size: 1rem; color: #00f2fe; letter-spacing: 6px;
+            text-transform: uppercase; margin-bottom: 40px;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        /* القسم الثاني: الرأس التفاعلي المطور */
+        .section-tag {
+            font-size: 0.8rem; color: #94a3b8; letter-spacing: 4px;
+            margin-bottom: 15px; font-weight: bold; text-transform: uppercase;
+        }
+
+        /* القسم الثالث: كروت المنتجات التفاعلية الفاخرة لموقع Relats */
+        .cards-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px; width: 100%; max-width: 1200px; margin-top: 40px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 4px; padding: 35px;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            cursor: pointer;
+        }
+        .card:hover {
+            transform: scale(1.02);
+            border-color: #00f2fe;
+            background: rgba(0, 242, 254, 0.02);
+            box-shadow: 0 15px 30px rgba(0, 242, 254, 0.05);
+        }
+        .card h3 { font-size: 1.2rem; margin-bottom: 15px; color: #ffffff; letter-spacing: 1px; font-weight: bold;}
+        .card p { color: #64748b; line-height: 1.6; font-size: 14px; }
+
+        .scroll-indicator {
+            position: absolute; bottom: 40px;
+            color: #475569; font-size: 11px; letter-spacing: 3px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة التحميل الذكية للمؤثرات -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top: 25px; color: #ffffff; letter-spacing: 4px; font-size: 12px; text-transform: uppercase;">LOADING B E S A EXPERIENCES...</p>
+    </div>
+
+    <!-- الهيدر الرسمي للموقع -->
+    <header>
+        <div class="logo">B E S A</div>
+        <div class="nav-links interactive-element">
+            <button class="nav-btn">CONNECT</button>
+        </div>
+    </header>
+
+    <!-- مكان عرض الرسوميات التفاعلية 3D WebGL -->
+    <div id="canvas-container"></div>
+
+    <!-- المحتوى النصي المنسق فوق المشهد ثلاثي الأبعاد -->
+    <div id="ui-wrapper">
+        
+        <!-- القسم الأول: الواجهة الأساسية (بداية الفيديو) -->
+        <section id="hero-section">
+            <h1 class="hero-title">B E S A</h1>
+            <p class="hero-subtitle">CREATIVE DIGITAL FRONTIER</p>
+            <div class="scroll-indicator">SCROLL DOWN TO EXPLORE ⬇</div>
+        </section>
+
+        <!-- القسم الثاني: شبكة جزيئات الرأس التفاعلية (منتصف الفيديو) -->
+        <section id="interactive-section">
+            <span class="section-tag">01 / NEURAL NETWORK MESH</span>
+            <h2 style="font-size: 2.2rem; font-weight: 400; letter-spacing: 2px;">INTERACTIVE LIVE TRACKING</h2>
+            <p style="color: #64748b; margin-top: 15px; text-align: center; max-width: 550px; line-height: 1.6; font-size: 14px;">Move your mouse or trackpad finger to manipulate and rotate the 3D particle cyber head system in real-time.</p>
+            <div class="scroll-indicator">SCROLL DOWN TO VIEW PRODUCTS ⬇</div>
+        </section>
+
+        <!-- القسم الثالث: كروت المنتجات الاحترافية المتوهجة (نهاية الفيديو) -->
+        <section id="cards-section">
+            <span class="section-tag">02 / PRODUCT SOLUTIONS</span>
+            <h2 style="font-size: 2.2rem; font-weight: 400; letter-spacing: 2px;">INDUSTRIAL INNOVATIONS</h2>
+            
+            <div class="cards-grid interactive-element">
+                <div class="card">
+                    <h3>PERIFLEX DURA HA</h3>
+                    <p>High-performance flexible protection sleeve engineered for extreme advanced technological infrastructures.</p>
+                </div>
+                <div class="card">
+                    <h3>VITROCERAMICS</h3>
+                    <p>Next-generation electrical and heat resistant industrial installations for global digital networks.</p>
+                </div>
+                <div class="card">
+                    <h3>3D WEB ARCHITECTURE</h3>
+                    <p>Elite immersive web design using native WebGL, Three.js, and ultra-smooth hardware-accelerated animations.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- استدعاء المحركات الرسمية لـ Three.js والأنيميشن العالمي من خوادم CDN السريعة -->
+    <script src="https://cloudflare.com"></script>
+    <script src="https://cloudflare.com"></script>
+
+    <script>
+        // --- إزالة شاشة التحميل تلقائياً عند جاهزية المحرك ---
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            loader.style.opacity = '0';
+            setTimeout(() => loader.style.display = 'none', 800);
+        });
+
+        // --- إعداد بيئة ومسرح الـ 3D ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x010409, 0.1); // الضباب الغامق الغامض مثل الفيديو بالظبط
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 6;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // --- تصنيع وتكوين شبكة جزيئات الرأس الدقيقة (Particle Cyber Head) ---
+        const particleCount = 40000; // كثافة جزيئات عالية ومطابقة للفيديو لتظهر التفاصيل
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        const baseColor = new THREE.Color('#00f2fe'); // اللون اللبني المشع السايبر
+        const energyColor = new THREE.Color('#ffffff'); // تداخل اللون الأبيض والرمادي للإضاءة الناصعة
+
+        for (let i = 0; i < particleCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.acos((Math.random() * 2) - 1);
+            
